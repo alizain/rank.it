@@ -66,3 +66,5 @@ dist/
 .vscode/
 
 .rpt2_cache
+
+bundle.js*
