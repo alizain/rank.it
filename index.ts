@@ -58,7 +58,7 @@ class RatingSystem {
 	newItemDefaults(): object {
 		throw new Error()
 	}
-	declareResult(winner: Item, loser: Item) {
+	declareResult(winner: Item, loser: Item, ...args) {
 		throw new Error()
 	}
 }

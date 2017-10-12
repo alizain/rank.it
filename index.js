@@ -66,6 +66,10 @@ var RatingSystem = /** @class */ (function () {
         throw new Error();
     };
     RatingSystem.prototype.declareResult = function (winner, loser) {
+        var args = [];
+        for (var _i = 2; _i < arguments.length; _i++) {
+            args[_i - 2] = arguments[_i];
+        }
         throw new Error();
     };
     return RatingSystem;
