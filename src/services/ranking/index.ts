@@ -4,9 +4,11 @@ import { RatingSystem } from './ratingSystem'
 
 export class Ranking {
 	public items: Item[]
+	public results: any[][]
 
 	constructor(private ratingSystem: RatingSystem, private matchCreator: MatchCreator) {
 		this.items = []
+		this.results = []
 	}
 
 	newItem(title: string): Item {
@@ -49,8 +51,15 @@ export class Ranking {
 	}
 
 	declareResult(winnerTitle: string, loserTitle: string, ...args): void {
+		this.results.push(Array.from(arguments))
 		const winner = this.getItem(winnerTitle)
+		if (!winner) {
+			console.log(winnerTitle)
+		}
 		const loser = this.getItem(loserTitle)
+		if (!loser) {
+			console.log(loserTitle)
+		}
 		this.ratingSystem.declareResult(winner, loser, ...args)
 		winner.played += 1
 		loser.played += 1

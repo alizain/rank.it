@@ -1,1 +1,128 @@
-<h1>Hello {{name}}!</h1>
+<form class='my-4 form-inline text-center' on:submit='addItem(event)'>
+  <input class='form-control' bind:value='value' type='text' placeholder='Enter a new item to rank'>
+  <button class='btn btn-outline-primary' type='submit'>Add</button>
+</form>
+
+<div class='btn-group my-4'>
+	<button class='btn btn-outline-secondary' on:click='loadCompanies()'>Load Companies</button>
+	<button class='btn btn-outline-secondary' on:click='exportResults()'>Export Results</button>
+	<button class='btn btn-outline-warning' on:click='resetItems()'>Reset</button>
+</div>
+
+{{ #if exportedResults }}
+<div class='my-4'>
+	<code>{{ exportedResults }}</code>
+</div>
+{{ /if }}
+
+<div class='my-4'>
+	<button class='btn btn-outline-primary' on:click='createMatchup()'>New Matchup</button>
+</div>
+
+{{ #if lastWinner }}
+<div class='my-4 text-muted'>The last winner was {{ lastWinner }}</div>
+{{ /if }}
+
+{{ #if matchup[0] && matchup[1] }}
+	<div class='btn-group mt-4 mb-6'>
+		<button class='btn btn-outline-dark' on:click='matchupWinner(0)'>{{ matchup[0] }}</button>
+		<button class='btn btn-outline-dark' on:click='matchupWinner(1)'>{{ matchup[1] }}</button>
+	</div>
+{{ /if }}
+
+{{ #if items.length > 0 }}
+	<ul class='list-group my-4'>
+		{{ #each items as item @title }}
+	    <li class='list-group-item'><a href='#' on:click='selectMatchup(item.title, event)'><strong>{{ item.title }}</strong> - {{ item.points }} - <em>{{ item.played }}</em></a></li>
+	  {{ /each }}
+	</ul>
+{{ /if }}
+
+<:Window on:keydown='matchupKeydown( event.keyCode )'/>
+
+<script>
+	import { Elo } from './services/ranking/ratingSystem'
+	import { pureRandom } from './services/ranking/matchCreator'
+	import { Ranking } from './services/ranking'
+
+	import { companies, results } from './fixtures'
+
+	const ranking = new Ranking(
+		new Elo(600, 32),
+		pureRandom()
+	)
+
+	export default {
+		data() {
+			return {
+				items: [],
+				matchup: [],
+				selectMatchupSwitch: true,
+				value: '',
+			}
+		},
+		methods: {
+			addItem(ev) {
+				ev.preventDefault()
+				const value = this.get('value')
+				ranking.addItem(value)
+				this.set({ items: ranking.items, value: '' })
+			},
+			createMatchup() {
+				this.set({ matchup: ranking.createMatchup() })
+			},
+			matchupWinner(index) {
+				const matchup = this.get('matchup')
+				let winner
+				let loser
+				if (index === 0) {
+					winner = matchup[0]
+					loser = matchup[1]
+				} else if (index === 1) {
+					winner = matchup[1]
+					loser = matchup[0]
+				} else {
+					throw new Error('invalid winner index')
+				}
+				ranking.declareResult(winner, loser)
+				this.set({ items: ranking.items, lastWinner: winner })
+				this.createMatchup()
+			},
+			matchupKeydown(keyCode) {
+				if (keyCode == '37') {
+					// left arrow
+					this.matchupWinner(0)
+		    }
+				else if (keyCode == '39') {
+					// right arrow
+					this.matchupWinner(1)
+				}
+			},
+			selectMatchup(title, ev) {
+				if (ev && typeof ev.preventDefault === 'function') {
+					ev.preventDefault()
+				}
+				const mSwitch = this.get('selectMatchupSwitch')
+				const currMatchup = this.get('matchup')
+				const index = !!mSwitch & 1
+				currMatchup[index] = title
+				this.set({ matchup: currMatchup, selectMatchupSwitch: !mSwitch })
+			},
+			resetItems() {
+				ranking.resetItems()
+				this.set({ items: ranking.items })
+			},
+			loadCompanies() {
+				companies.forEach(title => ranking.addItem(title))
+				results.forEach(args => ranking.declareResult.apply(ranking, args))
+				this.set({ items: ranking.items })
+			},
+			exportResults() {
+				this.set({ exportedResults: JSON.stringify(ranking.results) })
+			}
+		},
+		components: {
+			InputForm
+		}
+	};
+</script>
