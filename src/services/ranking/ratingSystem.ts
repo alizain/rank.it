@@ -11,7 +11,10 @@ export class RatingSystem {
 }
 
 export class Elo extends RatingSystem {
-	constructor(public initialPoints: number = 400, public kFactor: number = 32) {
+	constructor(
+		readonly initialPoints: number = 400,
+		readonly kFactor: number = 32,
+	) {
 		super()
 	}
 
